@@ -1,0 +1,5 @@
+django-phonenumber-field==7.0.2
+phonenumbers==8.13.4
+django==3.2.6
+Pillow==9.2.0
+djangorestframework==3.13.1
