@@ -3,3 +3,14 @@ phonenumbers==8.13.4
 django==3.2.6
 Pillow==9.2.0
 djangorestframework==3.13.1
+virtualenv==20.17.1
+distlib==0.3.6
+filelock==3.9.0
+platformdirs==2.6.2
+django-environ==0.9.0
+psycopg2-binary==2.9.5
+djangorestframework-simplejwt==5.2.2
+pyjwt==2.6.0
+cffi==1.15.1
+cryptography==39.0.0
+pycparser==2.21
