@@ -9,9 +9,9 @@ from rest_framework_simplejwt.tokens import Token
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 from authentication import utils
-from authentication.models import UserCreateCode
+from authentication.models import UserCreateCode, ActivityCategory
 from authentication.serializers import UserCreateSerializer, MyTokenObtainPairSerializer, CodeSerializer, \
-    UpdatePasswordSerializer
+    UpdatePasswordSerializer, ActivitySerializer
 
 User = get_user_model()
 
@@ -22,6 +22,11 @@ def reset_password(request):
     user = serializer.is_valid(raise_exception=True)
     utils.gen_code(user)
     return Response(status=status.HTTP_201_CREATED)
+
+
+@api_view(["get"])
+def get_categories(request):
+    return Response(ActivitySerializer(ActivityCategory.objects.all(), many=True).data)
 
 
 class UserViewSet(viewsets.ModelViewSet, TokenObtainPairSerializer):

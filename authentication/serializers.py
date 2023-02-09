@@ -7,13 +7,20 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
 
 from JustDoIT.backends import authenticate
-from authentication.models import UserCreateCode
+from authentication.models import UserCreateCode, ActivityCategory
 
 User = get_user_model()
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class ActivitySerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = ActivityCategory
+        fields = ('id', 'description')
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    activities_info = ActivitySerializer(many=True, read_only=True, source='activities')
     password = serializers.CharField(write_only=True, required=True)
 
     def create(self, validated_data):
@@ -22,8 +29,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'phone_number', 'password', 'firstname', 'groups',
-                  'lastname', 'photo', 'sex', 'doc_type', 'doc_info',
-                  'is_entity', 'activity', 'image', 'CV')
+                  'lastname', 'photo', 'sex', 'region', 'doc_type', 'doc_info',
+                  'is_entity', 'activity', 'image', 'CV', 'activities', 'activities_info')
+        extra_kwargs = {'activities': {'required': False, 'write_only': True}}
 
 
 class UpdatePasswordSerializer(serializers.ModelSerializer):
@@ -92,3 +100,4 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             update_last_login(None, self.user)
 
         return data
+
