@@ -1,5 +1,9 @@
-from django.contrib.auth import get_user_model
+import json
+
+from django.contrib.auth import get_user_model, get_user
 from django.contrib.auth.models import update_last_login
+from django.http import HttpRequest, JsonResponse, HttpResponse, HttpResponseServerError
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
@@ -9,9 +13,9 @@ from rest_framework_simplejwt.tokens import Token
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 from authentication import utils
-from authentication.models import UserCreateCode, ActivityCategory
+from authentication.models import UserCreateCode, ActivityCategory, CustomUser, Review
 from authentication.serializers import UserCreateSerializer, MyTokenObtainPairSerializer, CodeSerializer, \
-    UpdatePasswordSerializer, ActivitySerializer
+    UpdatePasswordSerializer, ActivitySerializer, UserProfileSerializer, ReviewSerializer
 
 User = get_user_model()
 
@@ -64,10 +68,15 @@ class UserViewSet(viewsets.ModelViewSet, TokenObtainPairSerializer):
     def perform_create(self, serializer):
         return serializer.save()
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = request.user
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+    def retrieve(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        try:
+            user = get_user(request)
+            serializer = UserProfileSerializer(user)
+            print(serializer.data)
+            # serializer = self.get_serializer(instance)
+            return JsonResponse(serializer.data)
+        except Exception as ex:
+            return HttpResponseServerError(f'Something goes wrong: {ex}')
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
