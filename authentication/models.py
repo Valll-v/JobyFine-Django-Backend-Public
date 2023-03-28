@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password
 from django.apps import apps
@@ -74,6 +75,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     CV = models.FileField(upload_to=user_directory_path, null=True, blank=True, verbose_name='Резюме')
     activities = models.ManyToManyField(to='ActivityCategory', related_name='users', null=True, blank=True)
     is_staff = models.BooleanField(default=False)
+    # TODO считать аггрегатор .count() из таблички с заданиями
+    tasks_competed_count = models.IntegerField(blank=True, null=True, default=0,
+                                               verbose_name='Кол-во выполненных заданий')
+    tasks_created_count = models.IntegerField(blank=True, null=True, default=0,
+                                              verbose_name='Кол-во созданных заданий')
 
     @property
     def is_authenticated(self):
@@ -102,3 +108,52 @@ class UserCreateCode(models.Model):
 
 class ActivityCategory(models.Model):
     description = models.CharField(max_length=100)
+
+
+class Review(models.Model):
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True,
+                              related_name='reviews_sent', verbose_name='От кого')
+    user = models.ForeignKey(CustomUser, related_name='reviews', on_delete=models.CASCADE,
+                             blank=True, null=True, verbose_name='На кого')
+    message = models.CharField(max_length=10000, blank=True, null=True, verbose_name='Отзыв')
+    mark = models.IntegerField(blank=True, null=True, default=5, verbose_name='Оценка')
+    date = models.DateTimeField(auto_now_add=True, verbose_name='Дата отзыва (timestamp)')
+
+    class Meta:
+        # TODO что это такое?
+        # managed = True
+        db_table = 'reviews'
+        verbose_name_plural = 'Отзывы'
+        verbose_name = 'Отзыв'
+
+
+# class Order(models.Model):
+#     owner = models.ForeignKey('CustomUser', on_delete=models.CASCADE, null=True, verbose_name='Создатель')
+#     activities = models.ManyToManyField(to='ActivityCategory', null=True, verbose_name='Категория')
+#     task_name = models.CharField(max_length=1024, null=True, verbose_name='Название вашей задачи')
+#     task_description = models.CharField(max_length=1024, null=True, verbose_name='Описание задачи')
+#     img_or_doc = models.FileField(null=True, upload_to="img_doc", verbose_name='Фото или документ')
+#     date_start = models.DateTimeField(verbose_name='Дата начала выполнения заказа')
+#     date_end = models.DateTimeField(verbose_name='Дата завершения выполнения заказа')
+#     price_from = models.IntegerField(null=True, verbose_name='Бюджет от')
+#     price_to = models.IntegerField(null=True, verbose_name='Бюджет до')
+#
+#     class Meta:
+#         managed = True
+#         verbose_name_plural = 'Заказы'
+#         verbose_name = 'Заказ'
+#
+#
+# class Responses(models.Model):
+#     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=False,
+#                               verbose_name="Создатель")
+#     task = models.ForeignKey(Order, on_delete=models.CASCADE, blank=False, null=False, verbose_name="Задание")
+#     time = models.DateTimeField(auto_now_add=True)
+#     payment = models.ForeignKey('Payment', on_delete=models.CASCADE, blank=True,
+#                                 null=True, related_name='booking_payments',
+#                                 verbose_name='Оплата')
+#
+#     class Meta:
+#         managed = True
+#         verbose_name_plural = "Отклики"
+#         verbose_name = 'Отклик'

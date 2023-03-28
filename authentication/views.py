@@ -1,7 +1,12 @@
-from django.contrib.auth import get_user_model
+import json
+
+from django.contrib.auth import get_user_model, get_user
 from django.contrib.auth.models import update_last_login
+from django.http import HttpRequest, JsonResponse, HttpResponse, HttpResponseServerError
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import action, api_view
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
@@ -9,9 +14,9 @@ from rest_framework_simplejwt.tokens import Token
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import generics
 from authentication import utils
-from authentication.models import UserCreateCode, ActivityCategory
+from authentication.models import UserCreateCode, ActivityCategory, CustomUser, Review
 from authentication.serializers import UserCreateSerializer, MyTokenObtainPairSerializer, CodeSerializer, \
-    UpdatePasswordSerializer, ActivitySerializer
+    UpdatePasswordSerializer, ActivitySerializer, UserProfileSerializer, ReviewSerializer
 
 User = get_user_model()
 
@@ -38,7 +43,8 @@ class UserViewSet(viewsets.ModelViewSet, TokenObtainPairSerializer):
     def get_serializer_class(self):
         if self.action == 'update':
             return CodeSerializer
-        return UserCreateSerializer
+        # TODO поменять
+        return UserProfileSerializer
 
     def get_permissions(self):
         return super().get_permissions()
@@ -63,12 +69,85 @@ class UserViewSet(viewsets.ModelViewSet, TokenObtainPairSerializer):
 
     def perform_create(self, serializer):
         return serializer.save()
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = request.user
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+    def retrieve(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        try:
+            user = get_user(request)
+            # TODO поменять
+            serializer = UserProfileSerializer(user)
+            print(type(serializer.data))
+            # serializer = self.get_serializer(instance)
+            return JsonResponse(serializer.data)
+        except Exception as ex:
+            return HttpResponseServerError(f'Something goes wrong: {ex}')
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
+    def get_queryset(self):
+        return Review.objects.all()
+
+    def _create_review(self, request, message, mark, **extra_fields):
+        print(request)
+        print(get_user(request))
+        # groups = extra_fields.pop('groups', [])
+        # activities = extra_fields.pop('activities', [])
+        # ReviewModel = apps.get_model(self.model._meta.app_label, self.model._meta.object_name)
+        review = self.model(message=message, mark=mark, **extra_fields)
+        review.save(using=self._db)
+        # review.groups.set(groups)
+        # review.activities.set(activities)
+        return review
+
+    def create_review(self, request, *args, **kwargs):
+        user_data = request.data
+        user_to = user_data.get('user')
+        print(user_to)
+        user_to_obj = CustomUser.objects.filter(pk=user_to)[0]
+        print(user_to_obj)
+        # user_data['user'] = user_to_obj
+        owner = get_user(request)
+        user_data_new = dict(user_data)
+        print(user_data_new)
+        user_data_new['user'] = user_to_obj
+        user_data_new['owner'] = owner
+        user_data_new['message'] = user_data_new['message'][0]
+        user_data_new['mark'] = user_data_new['mark'][0]
+        print(user_data_new)
+        # TODO заносить значения user и owner в сериализатор, чтоб он создал объект
+        serializer = self.get_serializer(data=user_data_new)
+        print('LOL:', request.data)
+        # user.save(using=self._db)
+        # user.groups.set(groups)
+        # user.activities.set(activities)
+        serializer.is_valid(raise_exception=True)
+        review = self.perform_create(serializer)
+        print(serializer.data)
+        # headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def get_review(self, request: HttpRequest) -> HttpResponse:
+        try:
+            user = get_user(request)
+            serializer = ReviewSerializer
+            print(serializer.data)
+            # print(user.reviews)
+            serializer = ReviewSerializer(user.reviews, many=True)
+            # print(serializer.data)
+            # return JsonResponse(serializer.data, safe=False)
+            return Response(serializer.data)
+        except Exception as ex:
+            return HttpResponseServerError(f'Something goes wrong: {ex}')
+
+    # def get_review(self, request: HttpRequest) -> HttpResponse:
+    #     try:
+    #         user = get_user(request)
+    #         serializer = self.serializer_class(data=request.data)
+    #         serializer.is_valid()
+    #         print(serializer.validated_data)
+    #         return HttpResponse(self.queryset.filter(user=user).values())
+    #     except Exception as ex:
+    #         return HttpResponseServerError(f'Something goes wrong: {ex}')
