@@ -2,12 +2,13 @@ from django.contrib.auth import get_user_model, get_user
 from django.contrib.auth.models import update_last_login
 from rest_framework import serializers, exceptions
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import empty
+from rest_framework.fields import empty, SerializerMethodField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
 
 from JustDoIT.backends import authenticate
 from authentication import utils
+from authentication.utils import count_average
 from authentication.models import UserCreateCode, ActivityCategory, CustomUser, Review
 
 User = get_user_model()
@@ -21,7 +22,7 @@ class ActivitySerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    activities_info = ActivitySerializer(many=True, read_only=True, source='activities')
+    activities = ActivitySerializer(many=True, read_only=True)
     password = serializers.CharField(write_only=True, required=True)
 
     def create(self, validated_data):
@@ -31,7 +32,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'phone_number', 'password', 'firstname', 'groups',
                   'lastname', 'photo', 'sex', 'region', 'doc_type', 'doc_info',
-                  'is_entity', 'activity', 'image', 'CV', 'activities', 'activities_info')
+                  'is_entity', 'activity', 'image', 'CV', 'activities')
         extra_kwargs = {'activities': {'required': False, 'write_only': True}}
 
 
@@ -102,23 +103,32 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return data
 
-
-class ReviewSerializer(serializers.ModelSerializer):
-    # average = serializers.SerializerMethodField('count_average')
-
-    # def count_average(self, count_review):
-    #     return count_review.name == "average"
-
-    class Meta:
-        model = Review
-        fields = '__all__'
-
-
 class UserProfileSerializer(serializers.ModelSerializer):
-    # reviews = ReviewSerializer(many=True)
+    rating = SerializerMethodField()
 
     class Meta:
         model = User
-        # fields = ('firstname', 'lastname', 'phone_number', 'email', 'password', 'groups', 'photo', 'region',
-        #           'activities', 'doc_type', 'doc_info', 'photo')
+        # TODO как обозначить обязательные поля?
+        # TODO добавить поле Описание фото + загрузить фото +загрузить рюземе (не обязательно);
+        fields = ('firstname', 'lastname', 'groups', 'rating', 'phone_number', 'email',
+                  'photo', 'password', 'region', 'activities', 'groups',
+                  'doc_type', 'doc_info')
+
+    def get_rating(self, obj):
+        count_average_ = count_average(obj.reviews.all())
+        print(count_average_)
+        return count_average_
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    owner = UserProfileSerializer(read_only=True)
+    user = UserProfileSerializer(write_only=True)
+
+    def create(self, validated_data):
+        instance, _ = Review.objects.get_or_create(**validated_data)
+        print(instance, _)
+        return instance
+
+    class Meta:
+        model = Review
         fields = '__all__'

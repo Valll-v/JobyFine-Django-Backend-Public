@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password
 from django.apps import apps
@@ -74,6 +75,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     CV = models.FileField(upload_to=user_directory_path, null=True, blank=True, verbose_name='Резюме')
     activities = models.ManyToManyField(to='ActivityCategory', related_name='users', null=True, blank=True)
     is_staff = models.BooleanField(default=False)
+    # TODO считать аггрегатор .count() из таблички с заданиями
+    tasks_competed_count = models.IntegerField(blank=True, null=True, default=0,
+                                               verbose_name='Кол-во выполненных заданий')
+    tasks_created_count = models.IntegerField(blank=True, null=True, default=0,
+                                              verbose_name='Кол-во созданных заданий')
 
     @property
     def is_authenticated(self):
@@ -105,17 +111,18 @@ class ActivityCategory(models.Model):
 
 
 class Review(models.Model):
-    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True, related_name="owner",
-                              verbose_name="От кого")
-    user = models.ForeignKey(CustomUser, related_name='reviews', on_delete=models.CASCADE, blank=True, null=True,
-                             verbose_name="На кого")
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True,
+                              related_name='reviews_sent', verbose_name='От кого')
+    user = models.ForeignKey(CustomUser, related_name='reviews', on_delete=models.CASCADE,
+                             blank=True, null=True, verbose_name='На кого')
     message = models.CharField(max_length=10000, blank=True, null=True, verbose_name='Отзыв')
-    mark = models.IntegerField(blank=True, null=True, default=2, verbose_name='Оценка')
+    mark = models.IntegerField(blank=True, null=True, default=5, verbose_name='Оценка')
     date = models.DateTimeField(auto_now_add=True, verbose_name='Дата отзыва (timestamp)')
 
     class Meta:
-        managed = True
-        # db_table = 'reviews'
+        # TODO что это такое?
+        # managed = True
+        db_table = 'reviews'
         verbose_name_plural = 'Отзывы'
         verbose_name = 'Отзыв'
 

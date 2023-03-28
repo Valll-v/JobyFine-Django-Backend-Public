@@ -13,6 +13,12 @@ def gen_code(user):
     code.code = send_phone_code(user)
     code.save()
 
+def count_average(reviews):
+    sum_ = 0
+    for i in reviews:
+        sum_ += i.mark
+    return round(sum_ / len(reviews) if len(reviews) != 0 else 0, 2)
+
 
 def count_average(reviews):
     sum_ = 0
