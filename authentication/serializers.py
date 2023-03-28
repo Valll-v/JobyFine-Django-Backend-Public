@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, get_user
 from django.contrib.auth.models import update_last_login
 from rest_framework import serializers, exceptions
 from rest_framework.exceptions import ValidationError
@@ -7,7 +7,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
 
 from JustDoIT.backends import authenticate
-from authentication.models import UserCreateCode, ActivityCategory
+from authentication import utils
+from authentication.models import UserCreateCode, ActivityCategory, CustomUser, Review
 
 User = get_user_model()
 
@@ -101,3 +102,23 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return data
 
+
+class ReviewSerializer(serializers.ModelSerializer):
+    # average = serializers.SerializerMethodField('count_average')
+
+    # def count_average(self, count_review):
+    #     return count_review.name == "average"
+
+    class Meta:
+        model = Review
+        fields = '__all__'
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    # reviews = ReviewSerializer(many=True)
+
+    class Meta:
+        model = User
+        # fields = ('firstname', 'lastname', 'phone_number', 'email', 'password', 'groups', 'photo', 'region',
+        #           'activities', 'doc_type', 'doc_info', 'photo')
+        fields = '__all__'
