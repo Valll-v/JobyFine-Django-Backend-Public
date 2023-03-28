@@ -6,6 +6,7 @@ from django.http import HttpRequest, JsonResponse, HttpResponse, HttpResponseSer
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import action, api_view
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
@@ -81,3 +82,26 @@ class UserViewSet(viewsets.ModelViewSet, TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+
+    def get_review(self, request: HttpRequest) -> HttpResponse:
+        try:
+            user = get_user(request)
+            serializer = ReviewSerializer
+            print(serializer.data)
+            return HttpResponse(user)
+        except Exception as ex:
+            return HttpResponseServerError(f'Something goes wrong: {ex}')
+
+    # def get_review(self, request: HttpRequest) -> HttpResponse:
+    #     try:
+    #         user = get_user(request)
+    #         serializer = self.serializer_class(data=request.data)
+    #         serializer.is_valid()
+    #         print(serializer.validated_data)
+    #         return HttpResponse(self.queryset.filter(user=user).values())
+    #     except Exception as ex:
+    #         return HttpResponseServerError(f'Something goes wrong: {ex}')
