@@ -122,7 +122,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     owner = UserProfileSerializer(read_only=True)
-    user = UserProfileSerializer(write_only=True)
+    user = serializers.IntegerField(write_only=True)
 
     def create(self, validated_data):
         instance, _ = Review.objects.get_or_create(**validated_data)

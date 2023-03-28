@@ -103,7 +103,26 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return review
 
     def create_review(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        user_data = request.data
+        user_to = user_data.get('user')
+        print(user_to)
+        user_to_obj = CustomUser.objects.filter(pk=user_to)[0]
+        print(user_to_obj)
+        # user_data['user'] = user_to_obj
+        owner = get_user(request)
+        user_data_new = dict(user_data)
+        print(user_data_new)
+        user_data_new['user'] = user_to_obj
+        user_data_new['owner'] = owner
+        user_data_new['message'] = user_data_new['message'][0]
+        user_data_new['mark'] = user_data_new['mark'][0]
+        print(user_data_new)
+        # TODO заносить значения user и owner в сериализатор, чтоб он создал объект
+        serializer = self.get_serializer(data=user_data_new)
+        print('LOL:', request.data)
+        # user.save(using=self._db)
+        # user.groups.set(groups)
+        # user.activities.set(activities)
         serializer.is_valid(raise_exception=True)
         review = self.perform_create(serializer)
         print(serializer.data)
