@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
 from rest_framework import serializers, exceptions
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import empty
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
 
@@ -41,6 +42,14 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ('email', 'phone_number', 'firstname', 'groups',
                   'lastname', 'photo', 'sex', 'region', 'doc_type', 'doc_info',
                   'is_entity', 'activity', 'image', 'CV', 'activities_info', 'last_seen')
+
+
+class UpdateProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email', 'firstname', 'lastname', 'photo', 'sex', 'region', 'doc_type', 'doc_info',
+                  'is_entity', 'activity', 'image', 'CV')
 
 
 class UpdatePasswordSerializer(serializers.ModelSerializer):
@@ -102,3 +111,4 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             update_last_login(None, self.user)
 
         return data
+
