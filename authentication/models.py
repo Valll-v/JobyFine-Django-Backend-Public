@@ -74,6 +74,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     CV = models.FileField(upload_to=user_directory_path, null=True, blank=True, verbose_name='Резюме')
     activities = models.ManyToManyField(to='ActivityCategory', related_name='users', null=True, blank=True)
     is_staff = models.BooleanField(default=False)
+    last_seen = models.DateTimeField(null=True, blank=True)
+    update_pass = models.BooleanField(default=False)
 
     @property
     def is_authenticated(self):

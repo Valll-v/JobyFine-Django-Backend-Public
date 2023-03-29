@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
 from rest_framework import serializers, exceptions
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import empty
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
 
@@ -34,6 +33,16 @@ class UserCreateSerializer(serializers.ModelSerializer):
         extra_kwargs = {'activities': {'required': False, 'write_only': True}}
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    activities_info = ActivitySerializer(many=True, read_only=True, source='activities')
+
+    class Meta:
+        model = User
+        fields = ('email', 'phone_number', 'firstname', 'groups',
+                  'lastname', 'photo', 'sex', 'region', 'doc_type', 'doc_info',
+                  'is_entity', 'activity', 'image', 'CV', 'activities_info', 'last_seen')
+
+
 class UpdatePasswordSerializer(serializers.ModelSerializer):
 
     def is_valid(self, raise_exception=False):
@@ -62,14 +71,7 @@ class CodeSerializer(serializers.ModelSerializer):
         except AssertionError:
             raise ValidationError('Неверный код')
         if hasattr(self, 'update_passwd'):
-            try:
-                assert data.get('password')
-            except AssertionError:
-                raise ValidationError('Вы не ввели пароль')
-            code.delete()
-            if not user.is_active:
-                raise ValidationError('Пользователь не активен для восстановления пароля')
-            user.set_password(data.get("password"))
+            user.update_pass = True
             user.save()
         else:
             code.delete()
@@ -100,4 +102,3 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             update_last_login(None, self.user)
 
         return data
-

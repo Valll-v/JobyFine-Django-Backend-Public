@@ -1,17 +1,18 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
+from django.db.models import Q
 from rest_framework import status, viewsets, permissions
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import api_view
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
-from rest_framework_simplejwt.tokens import Token
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import generics
+
 from authentication import utils
-from authentication.models import UserCreateCode, ActivityCategory
+from authentication.models import ActivityCategory
 from authentication.serializers import UserCreateSerializer, MyTokenObtainPairSerializer, CodeSerializer, \
-    UpdatePasswordSerializer, ActivitySerializer
+    UpdatePasswordSerializer, ActivitySerializer, ProfileSerializer
 
 User = get_user_model()
 
@@ -24,9 +25,38 @@ def reset_password(request):
     return Response(status=status.HTTP_201_CREATED)
 
 
+@api_view(["post"])
+def check_if_exists(request):
+    data = request.data
+    user = User.objects.filter(
+        Q(phone_number=data.get("phone_number")) | Q(email=data.get("email"))
+    ).first()
+    print(user)
+    print(User.objects.filter(email="email").first())
+    if user:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=["Пользователь уже существует"])
+    else:
+        return Response(status=status.HTTP_200_OK)
+
+
 @api_view(["get"])
 def get_categories(request):
     return Response(ActivitySerializer(ActivityCategory.objects.all(), many=True).data)
+
+
+@api_view(["post"])
+def update_pass_final(request: Request):
+    if not request.user.is_authenticated:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    if not request.user.update_pass:
+        return Response(status=status.HTTP_403_FORBIDDEN, data=["Невозможно сменить пароль"])
+    password = str(request.data.get("password"))
+    if not password:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data=["Введите пароль"])
+    request.user.set_password(password)
+    request.user.update_pass = False
+    request.user.save()
+    return Response(status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ModelViewSet, TokenObtainPairSerializer):
@@ -38,9 +68,13 @@ class UserViewSet(viewsets.ModelViewSet, TokenObtainPairSerializer):
     def get_serializer_class(self):
         if self.action == 'update':
             return CodeSerializer
+        elif self.action == 'retrieve':
+            return ProfileSerializer
         return UserCreateSerializer
 
     def get_permissions(self):
+        if self.action == 'retrieve':
+            return [permissions.IsAuthenticated()]
         return super().get_permissions()
 
     def create(self, request, *args, **kwargs):

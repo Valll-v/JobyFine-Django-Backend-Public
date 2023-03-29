@@ -6,9 +6,11 @@ from authentication.views import MyTokenObtainPairView
 
 urlpatterns = [
     path('reset_password', views.reset_password),
+    path('reset_password_confirm', views.update_pass_final),
     path('categories', views.get_categories),
     path('', views.UserViewSet.as_view({'post': 'create', 'get': 'retrieve', 'put': 'update'})),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('check', views.check_if_exists),
 ]
