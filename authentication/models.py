@@ -6,6 +6,7 @@ from django.core.validators import validate_email
 from django.db import models
 
 # Create your models here.
+from django.db.models import Avg
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -80,6 +81,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     @property
     def is_authenticated(self):
         return self.is_active
+
+    @property
+    def ranking(self):
+        return self.reviews.aggregate(ranking=Avg('mark')).get('ranking')
 
     groups = models.ManyToManyField(
         Group,

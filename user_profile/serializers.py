@@ -5,6 +5,13 @@ from authentication.serializers import ActivitySerializer
 User = get_user_model()
 
 
+class ShortProfileInfoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('id', 'firstname', 'lastname', 'photo')
+
+
 class UpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -22,6 +29,6 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'phone_number', 'firstname', 'groups',
+        fields = ('id', 'email', 'phone_number', 'firstname', 'groups',
                   'lastname', 'photo', 'sex', 'region', 'doc_type', 'doc_info',
                   'is_entity', 'activity', 'image', 'CV', 'activities_info', 'last_seen')
