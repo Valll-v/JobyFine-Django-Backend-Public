@@ -1,17 +1,12 @@
-from django.shortcuts import render
 from rest_framework import viewsets, permissions
 
 
-# Create your views here.
 from rest_framework.response import Response
-
-from authentication.models import CustomUser
-from chats.models import Chat
 from chats.serializers import *
 
 
 class ChatViewSet(viewsets.ModelViewSet):
-    permissions = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == 'list':

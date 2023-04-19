@@ -24,4 +24,7 @@ urlpatterns = [
     path('profile/', include('user_profile.urls')),
     path('ranking/', include('ranking.urls')),
     path('chat/', include('chats.urls')),
+    path('orders/', include('orders.urls')),
+    path('questions/', include('info.urls')),
+    path('levels/', include('coins.urls'))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

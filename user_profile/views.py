@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
 
+from authentication.models import CustomUser
 from user_profile.serializers import UpdateProfileSerializer, ProfileSerializer
-
 
 User = get_user_model()
 
@@ -27,8 +27,16 @@ class ProfileActionViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = request.user
+        print(instance)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        phone_number = instance.phone_number
+        instance.delete()
+        print(instance)
+        print(User.objects.filter(phone_number=phone_number).first())
+        print(CustomUser.objects.filter(phone_number=phone_number).first())
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -38,8 +46,13 @@ class ProfileActionViewSet(viewsets.ModelViewSet):
         user = serializer.save()
 
         if getattr(instance, '_prefetched_objects_cache', None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
         return Response(ProfileSerializer(user).data)
+
+
+# class UpdatePhoneViewSet(generics.CreateAPIView, generics.UpdateAPIView):
+#     permission_classes = [permissions.IsAuthenticated]
+#
+#     def get_serializer_class(self):
+#         return UpdatePhoneSerializer

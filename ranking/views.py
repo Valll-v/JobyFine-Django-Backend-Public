@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Avg
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 
@@ -25,4 +24,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         user: CustomUser = request.user
         serializer = self.get_serializer(user)
         return Response(serializer.data)
+
+
 

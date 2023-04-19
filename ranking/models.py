@@ -2,6 +2,9 @@ from django.db import models
 
 
 # Create your models here.
+from phonenumber_field.modelfields import PhoneNumberField
+
+
 class Review(models.Model):
     reviewer = models.ForeignKey('authentication.CustomUser', on_delete=models.SET_NULL, blank=True, null=True,
                                  related_name='sent_reviews', verbose_name='От кого')
@@ -16,3 +19,4 @@ class Review(models.Model):
         db_table = 'reviews'
         verbose_name_plural = 'Отзывы'
         verbose_name = 'Отзыв'
+

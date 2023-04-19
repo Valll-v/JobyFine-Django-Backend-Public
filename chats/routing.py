@@ -1,4 +1,4 @@
-from django.urls import re_path
+    from django.urls import re_path
 
 from chats.consumers import WSConsumer
 

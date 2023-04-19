@@ -10,7 +10,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ('time', 'text', 'sender')
+        fields = ('id', 'time', 'text', 'sender')
 
 
 class FullChatSerializer(serializers.ModelSerializer):

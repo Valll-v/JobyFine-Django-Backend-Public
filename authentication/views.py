@@ -41,7 +41,7 @@ def check_if_exists(request):
 
 @api_view(["get"])
 def get_categories(request):
-    return Response(ActivitySerializer(ActivityCategory.objects.all(), many=True).data)
+    return Response(ActivitySerializer(ActivityCategory.objects.all().order_by('order_int', 'id'), many=True).data)
 
 
 @api_view(["post"])

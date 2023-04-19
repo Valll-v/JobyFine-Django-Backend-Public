@@ -1,8 +1,12 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 
 # Register your models here.
-from authentication.models import UserCreateCode, ActivityCategory
+from authentication.models import ActivityCategory, SubCategory
+
+
+User = get_user_model()
 
 
 class CustomUserAdmin(UserAdmin):
@@ -17,11 +21,21 @@ class CustomUserAdmin(UserAdmin):
             'photo'
         )}),
     )
-    search_fields = ('phone_number', 'username', 'last_seen')
+    search_fields = ('phone_number', 'firstname', 'lastname')
 
     def has_change_permission(self, request, obj=None):
         return False
 
 
-admin.site.register(UserCreateCode)
-admin.site.register(ActivityCategory)
+admin.site.register(User, CustomUserAdmin)
+
+
+@admin.register(ActivityCategory)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('description', 'photo', 'order_int')
+
+
+@admin.register(SubCategory)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('category', 'description')
+
